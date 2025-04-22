@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Encrypted Files</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f0f2f5;
+            padding: 40px;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        table {
+            margin: auto;
+            border-collapse: collapse;
+            width: 80%;
+            background: white;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        th, td {
+            padding: 12px 20px;
+            border-bottom: 1px solid #ddd;
+            text-align: center;
+        }
+
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .submit-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 25px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .submit-btn:hover {
+            background-color: #218838;
+        }
+
+        .get-pass-btn {
+            display: block;
+            margin: 20px auto;
+            padding: 10px 25px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+
+        .get-pass-btn:hover {
+            background-color: #0056b3;
+        }
+
+        input[type="radio"] {
+            transform: scale(1.2);
+        }
+
+        /* Modal styles */
+        #password-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        #password-modal div {
+            background: white;
+            width: 300px;
+            margin: 100px auto;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        #password-modal input[type="password"] {
+            padding: 8px;
+            width: 90%;
+            margin-top: 10px;
+        }
+
+        #password-modal button {
+            padding: 8px 16px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #password-modal button.cancel {
+            background-color: #dc3545;
+        }
+    </style>
+</head>
+<body>
+    <h2>Encrypted Files</h2>
+
+    {% if error %}
+        <p style="color: red; text-align: center;">{{ error }}</p>
+    {% endif %}
+
+    <form id="decrypt-form" method="post" action="{% url 'decrypt_and_download' %}">
+        {% csrf_token %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Select</th>
+                    <th>File Name</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for file in files %}
+                    <tr>
+                        <td>
+                            <input type="radio" name="file_name" value="{{ file }}" required onclick="setFileName('{{ file }}')">
+                        </td>
+                        <td>{{ file }}</td>
+                    </tr>
+                {% empty %}
+                    <tr><td colspan="2">No files found.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    
+        <button type="submit" class="submit-btn">Decrypt & Download</button>
+    </form>
+    
+    <form id="password-form" method="post" action="{% url 'get_password' %}">
+        {% csrf_token %}
+        <input type="hidden" name="file_name" id="selected-file-name">
+        <button type="submit" class="get-pass-btn">Get Password</button>
+    </form>
+
+    <!-- Password Input Modal -->
+    <div id="password-modal">
+        <div>
+            <h3>Enter Password</h3>
+            <input type="password" id="decrypt-password" placeholder="Password" required><br><br>
+            <button id="confirm-password">Confirm</button>
+            <button id="cancel-password" class="cancel">Cancel</button>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function(){
+
+            function getCSRFToken() {
+                return document.querySelector('[name=csrfmiddlewaretoken]').value;
+            }
+
+            $('.get-pass-btn').click(function(event){
+                event.preventDefault();
+
+                const fileName = $('input[name="file_name"]:checked').val();
+
+                if (!fileName) {
+                    alert("Please select a file.");
+                    return;
+                }
+
+                $.ajax({
+                    url: "{% url 'get_password' %}",
+                    type: "POST",
+                    headers: {
+                        "X-CSRFToken": getCSRFToken()
+                    },
+                    data: {
+                        file_name: fileName
+                    },
+                    success: function(response) {
+                        alert("Password request sent successfully!");
+                    },
+                    error: function(xhr, status, error) {
+                        alert("Error: " + (xhr.responseText || error));
+                    }
+                });
+            });
+
+            // Show password modal on Decrypt click
+            $('.submit-btn').click(function(event){
+                event.preventDefault();
+
+                const fileName = $('input[name="file_name"]:checked').val();
+                if (!fileName) {
+                    alert("Please select a file.");
+                    return;
+                }
+
+                $('#password-modal').fadeIn(); // Show modal
+            });
+
+            // Confirm password entry
+            $('#confirm-password').click(function() {
+                const password = $('#decrypt-password').val();
+
+                if (!password) {
+                    alert("Please enter a password.");
+                    return;
+                }
+
+                // Append hidden password field and submit
+                $('<input>').attr({
+                    type: 'hidden',
+                    name: 'password',
+                    value: password
+                }).appendTo('#decrypt-form');
+
+                $('#password-modal').fadeOut();
+                $('#decrypt-form').submit();
+            });
+
+            // Cancel modal
+            $('#cancel-password').click(function() {
+                $('#password-modal').fadeOut();
+                $('#decrypt-password').val('');
+            });
+
+        });
+    </script>
+</body>
+</html>
