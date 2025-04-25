@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Secure File System</title>
+    <meta name="csrf-token" content="{{ csrf_token }}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        .wrapper {
+            position: relative;
+            width: 350px;
+            height: 450px;
+            overflow: hidden;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+
+        .container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            padding: 2rem;
+            text-align: left; /* Align inputs to the left */
+            transition: transform 0.5s ease-in-out;
+        }
+
+        .login-container {
+            z-index: 2;
+            transform: translateX(0%);
+        }
+
+        .signup-container {
+            transform: translateX(100%);
+            z-index: 1;
+        }
+
+        input, button {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        button:hover {
+            background: #5648a1;
+        }
+
+        .toggle-btn {
+            background: none;
+            color: #667eea;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+
+        .toggle-btn:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <!-- Login Section -->
+        <div class="container login-container" id="login-container">
+            <h2>Login</h2>
+            <input type="text" id="username" placeholder="Username or Email">
+            <input type="password" id="password" placeholder="Password">
+            <button onclick="login()">Login</button>
+            <button class="toggle-btn" onclick="toggleForm()">Don't have an account? Sign Up</button>
+        </div>
+
+        <!-- Sign Up Section -->
+        <div class="container signup-container" id="signup-container">
+            <h2>Sign Up</h2>
+            <input type="text" id="new-username" placeholder="Username">
+            <input type="email" id="new-email" placeholder="Email">
+            <input type="password" id="new-password" placeholder="Password">
+            <button onclick="signup()">Sign Up</button>
+            <button class="toggle-btn" onclick="toggleForm()">Already have an account? Login</button>
+        </div>
+    </div>
+
+    <script>
+        function login() {
+            let username = document.getElementById('username').value.trim();
+            let password = document.getElementById('password').value.trim();
+
+            if (!username || !password) {
+                alert("Please fill all fields.");
+                return;
+            }
+
+            fetch('/login/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({ username, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Approval mail has been sent  to the mail");
+                    window.location.href = "/getapproval/";
+                } else {
+                    alert(data.error || "Invalid credentials.");
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        function signup() {
+            let username = document.getElementById('new-username').value.trim();
+            let email = document.getElementById('new-email').value.trim();
+            let password = document.getElementById('new-password').value.trim();
+
+            if (!username || !email || !password) {
+                alert("Please fill all fields.");
+                return;
+            }
+
+            fetch('/signup/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCSRFToken()
+                },
+                body: JSON.stringify({ username, email, password })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert("Sign Up successful! Please log in.");
+                    toggleForm();
+                } else {
+                    alert(data.error);
+                }
+            })
+            .catch(error => console.error("Error:", error));
+        }
+
+        function toggleForm() {
+            const loginContainer = document.getElementById('login-container');
+            const signupContainer = document.getElementById('signup-container');
+
+            if (loginContainer.style.transform === "translateX(-100%)") {
+                loginContainer.style.transform = "translateX(0%)";
+                signupContainer.style.transform = "translateX(100%)";
+            } else {
+                loginContainer.style.transform = "translateX(-100%)";
+                signupContainer.style.transform = "translateX(0%)";
+            }
+        }
+
+        function getCSRFToken() {
+            return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        }
+    </script>
+</body>
+</html>

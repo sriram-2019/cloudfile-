@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Encrypted File to AWS S3</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-blue-900 min-h-screen text-white font-sans">
+
+    <div class="container mx-auto p-6">
+        <div class="max-w-lg mx-auto bg-white text-black rounded-xl shadow-lg p-8">
+            <h2 class="text-3xl font-bold text-center text-blue-600 mb-6">🔒 Upload Encrypted File to AWS S3</h2>
+
+            {% if message %}
+                <div class="bg-green-500 text-white p-4 rounded-lg mb-6 text-center">
+                    {{ message }}
+                </div>
+            {% endif %}
+
+            <form method="POST" enctype="multipart/form-data" action="{% url 'upload_s3' %}">
+                {% csrf_token %}
+            
+
+                <div class="flex justify-center">
+                    <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition ease-in-out duration-300 transform hover:scale-105">
+                        🚀 Upload to S3
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>File Upload</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(to right, #74ebd5, #acb6e5);
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            animation: fadeIn 1s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .upload-container {
+            background-color: #fff;
+            padding: 40px 50px;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            text-align: center;
+            width: 90%;
+            max-width: 450px;
+        }
+
+        h2 {
+            margin-bottom: 25px;
+            color: #333;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .custom-file-upload {
+            display: inline-block;
+            padding: 14px 24px;
+            color: #007bff;
+            background-color: #e9f1ff;
+            border: 2px dashed #007bff;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .custom-file-upload:hover {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .file-name {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+        }
+
+        .btn {
+            margin-top: 20px;
+            display: inline-block;
+            padding: 12px 28px;
+            font-size: 16px;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: linear-gradient(135deg, #0056b3, #003d80);
+        }
+
+        .success-message {
+            margin-top: 20px;
+            color: #28a745;
+            font-weight: bold;
+            animation: pulse 0.5s ease-in-out alternate infinite;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.02); }
+        }
+
+        @media (max-width: 500px) {
+            .upload-container {
+                padding: 30px 20px;
+            }
+
+            .custom-file-upload, .btn {
+                width: 100%;
+                box-sizing: border-box;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="upload-container">
+        <h2>Upload a File</h2>
+
+        <form method="POST" enctype="multipart/form-data" action="{% url 'upload_file' %}">
+            {% csrf_token %}
+            <label for="file-upload" class="custom-file-upload">
+                Select a file
+            </label>
+            <input id="file-upload" type="file" name="uploaded_file" required onchange="showFileName(this)">
+            <div id="file-name" class="file-name"></div>
+            <br>
+            <button type="submit" class="btn">Upload</button>
+        </form>
+
+        {% if file_uploaded %}
+            <p class="success-message">✅ File uploaded successfully!</p>
+            <script>
+                setTimeout(() => {
+                    window.location.href = "{% url 'encrypt_file' %}";
+                }, 2000); // Redirect after 2 seconds
+            </script>
+            
+
+           
+        {% endif %}
+    </div>
+
+    <script>
+        function showFileName(input) {
+            const fileName = input.files[0]?.name || "No file selected";
+            document.getElementById('file-name').textContent = `📁 ${fileName}`;
+        }
+    </script>
+</body>
+</html>
